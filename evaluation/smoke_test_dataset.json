@@ -1,0 +1,22 @@
+
+[
+    {
+        "query": "What is deep learning?",
+        "relevant_chunk_ids": [
+            "test_chunk_002"
+        ],
+        "expected_answerable": true
+    },
+    {
+        "query": "How do computers learn patterns from data?",
+        "relevant_chunk_ids": [
+            "test_chunk_001"
+        ],
+        "expected_answerable": true
+    },
+    {
+        "query": "What is SQL used for?",
+        "relevant_chunk_ids": [],
+        "expected_answerable": false
+    }
+]

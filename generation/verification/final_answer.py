@@ -12,6 +12,26 @@ def build_final_answer(generated_response, verification_results):
         if field not in generated_response:
             raise ValueError(f"Missing generated response field: {field}")
 
+    # Handle explicit abstention separately.
+    if generated_response["insufficient_evidence"]:
+        return {
+            "answer": generated_response["answer"],
+            "citations": [],
+            "insufficient_evidence": True,
+            "verification": {
+                "overall_status": "ABSTAINED_INSUFFICIENT_EVIDENCE",
+                "total_claims": 0,
+                "status_counts": {
+                    "VERIFIED": 0,
+                    "CONTRADICTED": 0,
+                    "INSUFFICIENT_EVIDENCE": 0,
+                    "INVALID_CITATION": 0,
+                    "MISSING_CITATION": 0
+                },
+                "claim_results": []
+            }
+        }
+
     status_counts = {
         "VERIFIED": 0,
         "CONTRADICTED": 0,
@@ -48,7 +68,7 @@ def build_final_answer(generated_response, verification_results):
     return {
         "answer": generated_response["answer"],
         "citations": generated_response["citations"],
-        "insufficient_evidence": generated_response["insufficient_evidence"],
+        "insufficient_evidence": False,
         "verification": {
             "overall_status": overall_status,
             "total_claims": total_claims,

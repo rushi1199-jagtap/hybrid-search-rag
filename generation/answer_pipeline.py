@@ -9,6 +9,12 @@ from generation.verification.verification_engine import verify_claims
 from generation.verification.final_answer import build_final_answer
 
 
+ABSTENTION_MESSAGE = (
+    "The available documents do not contain sufficient information "
+    "to answer this question."
+)
+
+
 def run_rag_pipeline(
     query,
     top_k=5,
@@ -27,6 +33,25 @@ def run_rag_pipeline(
         use_reranking=use_reranking
     )
 
+    # Enforce abstention when retrieval returns no evidence.
+    if not retrieval_results:
+        generated_response = {
+            "answer": ABSTENTION_MESSAGE,
+            "citations": [],
+            "insufficient_evidence": True
+        }
+
+        final_response = build_final_answer(
+            generated_response=generated_response,
+            verification_results=[]
+        )
+
+        return {
+            "query": query,
+            **final_response,
+            "retrieved_chunks": []
+        }
+
     context = build_context(retrieval_results)
 
     generated_response = generate_answer(
@@ -34,24 +59,32 @@ def run_rag_pipeline(
         context=context
     )
 
-    claims = extract_claims(
-        generated_response["answer"]
-    )
+    # Skip claim verification when Gemini explicitly abstains.
+    if generated_response["insufficient_evidence"]:
+        final_response = build_final_answer(
+            generated_response=generated_response,
+            verification_results=[]
+        )
 
-    mapped_claims = map_claim_citations(
-        claims=claims,
-        citations=generated_response["citations"],
-        retrieved_chunks=retrieval_results
-    )
+    else:
+        claims = extract_claims(
+            generated_response["answer"]
+        )
 
-    verification_results = verify_claims(
-        mapped_claims
-    )
+        mapped_claims = map_claim_citations(
+            claims=claims,
+            citations=generated_response["citations"],
+            retrieved_chunks=retrieval_results
+        )
 
-    final_response = build_final_answer(
-        generated_response=generated_response,
-        verification_results=verification_results
-    )
+        verification_results = verify_claims(
+            mapped_claims
+        )
+
+        final_response = build_final_answer(
+            generated_response=generated_response,
+            verification_results=verification_results
+        )
 
     return {
         "query": query,

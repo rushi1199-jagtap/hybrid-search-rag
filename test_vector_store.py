@@ -1,4 +1,6 @@
 
+import pytest
+
 from ingestion.vector_store import (
     create_pinecone_client,
     create_index,
@@ -6,42 +8,26 @@ from ingestion.vector_store import (
 )
 
 
-def test_pinecone_connection():
-    print("Connecting to Pinecone...")
+@pytest.fixture(scope="module")
+def client():
+    return create_pinecone_client()
 
-    client = create_pinecone_client()
 
-    print("Pinecone connection successful!")
-
-    return client
+def test_pinecone_connection(client):
+    assert client is not None
 
 
 def test_create_index(client):
-    print("\nChecking Pinecone index...")
-
     index_name = create_index(client)
 
     assert index_name == "hybrid-search-rag"
 
-    print(f"Index name: {index_name}")
-
 
 def test_get_index(client):
-    print("\nGetting Pinecone index client...")
-
     index = get_pinecone_index(client)
+
+    assert index is not None
 
     stats = index.describe_index_stats()
 
-    print("Pinecone index client obtained successfully!")
-    print(f"Index statistics: {stats}")
-
-
-if __name__ == "__main__":
-    pinecone_client = test_pinecone_connection()
-
-    test_create_index(pinecone_client)
-
-    test_get_index(pinecone_client)
-
-    print("\nAll Pinecone tests passed!")
+    assert stats is not None

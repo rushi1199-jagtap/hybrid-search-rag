@@ -9,7 +9,20 @@ def extract_claims(answer):
     if not isinstance(answer, str) or not answer.strip():
         raise ValueError("Answer must be a non-empty string.")
 
-    sentences = re.split(r"(?<=[.!?])\s+", answer.strip())
+    answer = answer.strip()
+
+    answer = re.sub(
+        r"([.!?])\s*((?:\[Evidence\s+\d+\]\s*)+)",
+        lambda match: (
+            " "
+            + match.group(2).strip()
+            + match.group(1)
+            + " "
+        ),
+        answer
+    )
+
+    sentences = re.split(r"(?<=[.!?])\s+", answer)
 
     claims = []
 

@@ -97,3 +97,52 @@ def test_citation_mapper():
 
 if __name__ == "__main__":
     test_citation_mapper()
+
+
+import pytest
+
+
+@pytest.mark.parametrize(
+    "field,wrong_value",
+    [
+        ("document_id", "wrong_document_id"),
+        ("source", "wrong_source.pdf"),
+        ("page_number", 99)
+    ]
+)
+def test_citation_mapper_rejects_metadata_mismatch(field, wrong_value):
+    retrieved_chunk = {
+        "chunk_id": "test_chunk_001",
+        "document_id": "test_document_001",
+        "source": "sample.txt",
+        "page_number": 1,
+        "chunk_text": "Machine learning enables computers to learn patterns."
+    }
+
+    citation = {
+        "evidence_id": "Evidence 1",
+        "chunk_id": "test_chunk_001",
+        "document_id": "test_document_001",
+        "source": "sample.txt",
+        "page_number": 1
+    }
+
+    # Tamper with one citation metadata field.
+    citation[field] = wrong_value
+
+    results = map_claim_citations(
+        claims=[
+            {
+                "claim_id": "claim_001",
+                "claim_text": "Machine learning enables computers to learn patterns.",
+                "evidence_ids": ["Evidence 1"],
+                "has_citation": True
+            }
+        ],
+        citations=[citation],
+        retrieved_chunks=[retrieved_chunk]
+    )
+
+    assert results[0]["citation_valid"] is False
+    assert results[0]["mapped_citations"] == []
+    assert results[0]["invalid_evidence_ids"] == ["Evidence 1"]
