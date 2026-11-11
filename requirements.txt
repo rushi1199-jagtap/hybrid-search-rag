@@ -5,3 +5,7 @@ fastapi>=0.162.0
 uvicorn[standard]>=0.54.0
 pytest>=9.2.0
 rank_bm25
+cohere
+pinecone
+PyMuPDF
+python-docx
